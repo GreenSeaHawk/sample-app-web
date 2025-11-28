@@ -126,3 +126,10 @@ Merges to master need to manually be triggered in [Actions > github pages releas
 * https://saucelabs.github.io/sample-app-web/
 
 See: [.github/workflows/github-pages.yml GitHub Action](.github/workflows/github-pages.yml)
+
+
+To run on some macOS you will need to do this:
+arch -x86_64 zsh
+source ~/.nvm/nvm.sh
+nvm use 14
+npm run start

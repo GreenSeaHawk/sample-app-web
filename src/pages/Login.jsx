@@ -94,7 +94,7 @@ function Login(props) {
                   value={username}
                   onChange={handleUserChange}
                   testId="username"
-                  placeholder="Username"
+                  placeholder="Enter Username"
                   // Custom
                   id="user-name"
                   name="user-name"
