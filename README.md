@@ -125,7 +125,7 @@ Merges to master need to manually be triggered in [Actions > github pages releas
 * https://www.saucedemo.com
 * https://saucelabs.github.io/sample-app-web/
 
-See: [.github/workflows/github-pages.yml GitHub Action](.github/workflows/github-pages.yml)
+See: [.github/workflows/github-pages.yml GitHub Action](.github/workflows/github-pages.disabled.yml)
 
 
 To run on some macOS you will need to do this:
