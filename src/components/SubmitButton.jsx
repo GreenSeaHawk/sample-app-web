@@ -33,13 +33,12 @@ SubmitButton.propTypes = {
   /**
    * The value of the input
    */
-  value: PropTypes.string,
+  value: PropTypes.string.isRequired,
 };
 
 SubmitButton.defaultProps = {
   customClass: undefined,
   testId: undefined,
-  value: "Submit",
 };
 
 export default SubmitButton;
