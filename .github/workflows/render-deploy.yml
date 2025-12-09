@@ -21,6 +21,36 @@ jobs:
         run: |
           curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
 
+      - name: Wait for Render Staging Deploy to Complete
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_STAGING_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
+        run: |
+          echo "Waiting for Render staging deploy to finish..."
+          for i in {1..30}; do
+            STATUS=$(curl -s \
+              -H "Authorization: Bearer $RENDER_API_KEY" \
+              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys \
+              | jq -r '.[0].status')
+
+            echo "Current status: $STATUS"
+
+            if [[ "$STATUS" == "live" ]]; then
+              echo "Staging deploy is live!"
+              exit 0
+            fi
+
+            if [[ "$STATUS" == "failed" ]]; then
+              echo "Staging deploy FAILED."
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "Timed out waiting for staging deploy."
+          exit 1
+
   test:
     name: mabl Test
     needs: trigger-render-staging
