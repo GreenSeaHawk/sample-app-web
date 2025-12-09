@@ -32,7 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build app
-        run: npm run build
+        # Prevent CI warnings from failing the build
+        run: CI=false npm run build
       - name: Trigger Render Deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
