@@ -6,9 +6,27 @@ on:
       - main
 
 jobs:
+  trigger-render-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci
+      - name: Build app
+        # Prevent CI warnings from failing the build
+        run: CI=false npm run build
+      - name: Trigger Render Staging
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          curl -X POST \
+            -H "Accept: application/json" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            https://api.render.com/deploy/srv-$RENDER_STAGING_HOOK
 
   test:
     name: mabl Test
+    needs: trigger-render-staging
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +39,9 @@ jobs:
           MABL_API_KEY: ${{ secrets.MABL_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          application-id: dFtqmzsCsW0URJAVDLZ7vA-a
+#          application-id: dFtqmzsCsW0URJAVDLZ7vA-a
           environment-id: H5vlRzlVynLjzYtwsflyvQ-e
+          continue-on-failure: false
 
   trigger-render-deploy:
     needs: test
