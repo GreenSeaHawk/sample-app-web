@@ -40,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
 #          application-id: dFtqmzsCsW0URJAVDLZ7vA-a
-          environment-id: H5vlRzlVynLjzYtwsflyvQ-e
+          environment-id: kCEEVy4cmhgKZ7TxXBqHDA-e
           continue-on-failure: false
 
   trigger-render-deploy:
