@@ -40,7 +40,7 @@ jobs:
       - name: Output Trigger Time
         run: echo "Staging deploy triggered at ${{ needs.capture-trigger-time.outputs.time }}"
 
-  # Step 2: Wait for new staging deploy
+  # Step 2: Wait for new staging to deploy
   wait-for-render-staging:
     needs: trigger-render-staging
     runs-on: ubuntu-latest
