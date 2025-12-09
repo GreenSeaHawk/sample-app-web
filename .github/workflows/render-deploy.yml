@@ -18,42 +18,43 @@ jobs:
         run: CI=false npm run build
 
       - name: Trigger Render Staging Deploy
+        id: trigger_staging
         run: |
-          curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
+          echo "Triggering staging deploy..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}")
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "Deploy ID=$DEPLOY_ID" >> $GITHUB_ENV
 
       - name: Wait for Render Staging Deploy to Complete
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_STAGING_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
+          DEPLOY_ID: ${{ env.DEPLOY_ID }}
         run: |
-          echo "Waiting for Render staging deploy to finish..."
+          echo "Waiting for deploy $DEPLOY_ID to finish..."
           for i in {1..60}; do
             RESPONSE=$(curl -s \
-          -H "Authorization: Bearer $RENDER_API_KEY" \
-            https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys)
+              -H "Authorization: Bearer $RENDER_API_KEY" \
+              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys/$DEPLOY_ID)
           
-            DEPLOY_STATUS=$(echo "$RESPONSE" | jq -r '.data[0].deploy.deployStatus')
-            STATUS=$(echo "$RESPONSE" | jq -r '.data[0].status')
-          
-          echo "Deploy status: $DEPLOY_STATUS | Service status: $STATUS"
-          
-          # Static site is fully deployed
-            if [[ "$DEPLOY_STATUS" == "succeeded" ]] || [[ "$STATUS" == "updated" ]]; then
-            echo "Staging deploy is finished!"
-            exit 0
+            STATUS=$(echo "$RESPONSE" | jq -r '.status')
+            echo "Current deploy status: $STATUS"
+
+            if [[ "$STATUS" == "succeeded" ]] || [[ "$STATUS" == "active" ]]; then
+              echo "Staging deploy is finished!"
+              exit 0
             fi
-          
-            # Failed state
-            if [[ "$DEPLOY_STATUS" == "failed" ]] || [[ "$STATUS" == "failed" ]]; then
-            echo "Staging deploy FAILED."
-            exit 1
+
+            if [[ "$STATUS" == "failed" ]]; then
+              echo "Staging deploy FAILED."
+              exit 1
             fi
-          
+
             sleep 10
-            done
-            
-            echo "Timed out waiting for staging deploy."
-            exit 1
+          done
+
+          echo "Timed out waiting for staging deploy."
+          exit 1
 
   test:
     name: mabl Test
