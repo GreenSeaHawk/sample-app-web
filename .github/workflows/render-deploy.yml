@@ -21,7 +21,7 @@ jobs:
           MABL_API_KEY: ${{ secrets.MABL_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-#          application-id: <your-application-id-a>
+          application-id: dFtqmzsCsW0URJAVDLZ7vA-a
           environment-id: H5vlRzlVynLjzYtwsflyvQ-e
 
   trigger-render-deploy:
