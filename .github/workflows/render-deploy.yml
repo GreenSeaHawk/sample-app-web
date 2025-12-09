@@ -6,8 +6,24 @@ on:
       - main
 
 jobs:
-  trigger-render-staging:
+
+  # Step 0: Capture workflow start time
+  capture-trigger-time:
     runs-on: ubuntu-latest
+    outputs:
+      time: ${{ steps.set_time.outputs.time }}
+    steps:
+      - name: Set Trigger Time
+        id: set_time
+        run: |
+          echo "time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
+
+  # Step 1: Trigger staging deploy
+  trigger-render-staging:
+    needs: capture-trigger-time
+    runs-on: ubuntu-latest
+    outputs:
+      trigger_time: ${{ needs.capture-trigger-time.outputs.time }}
     steps:
       - uses: actions/checkout@v4
 
@@ -18,47 +34,49 @@ jobs:
         run: CI=false npm run build
 
       - name: Trigger Render Staging Deploy
-        id: trigger_staging
         run: |
-          echo "Triggering staging deploy..."
-          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}")
-          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
-          echo "Deploy ID=$DEPLOY_ID" >> $GITHUB_ENV
+          curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
 
-      - name: Wait for Render Staging Deploy to Complete
+      - name: Output Trigger Time
+        run: echo "Staging deploy triggered at ${{ needs.capture-trigger-time.outputs.time }}"
+
+  # Step 2: Wait for new staging deploy
+  wait-for-render-staging:
+    needs: trigger-render-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Render Staging Deploy to Appear
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_STAGING_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
-          DEPLOY_ID: ${{ env.DEPLOY_ID }}
+          DEPLOY_TRIGGER_TIME: ${{ needs.trigger-render-staging.outputs.trigger_time }}
         run: |
-          echo "Waiting for deploy $DEPLOY_ID to finish..."
+          echo "Polling for latest staging deploy..."
           for i in {1..60}; do
             RESPONSE=$(curl -s \
               -H "Authorization: Bearer $RENDER_API_KEY" \
-              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys/$DEPLOY_ID)
+              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys)
           
-            STATUS=$(echo "$RESPONSE" | jq -r '.status')
-            echo "Current deploy status: $STATUS"
+            LATEST_DEPLOY_TIME=$(echo "$RESPONSE" | jq -r '.data[0].deploy.createdAt')
+            STATUS=$(echo "$RESPONSE" | jq -r '.data[0].deploy.status')
+          
+            echo "Latest deploy created at: $LATEST_DEPLOY_TIME | status: $STATUS"
 
-            if [[ "$STATUS" == "succeeded" ]] || [[ "$STATUS" == "active" ]]; then
-              echo "Staging deploy is finished!"
+            # Check if the deploy is new and live
+            if [[ "$LATEST_DEPLOY_TIME" > "$DEPLOY_TRIGGER_TIME" ]] && [[ "$STATUS" == "live" ]]; then
+              echo "New staging deploy is live!"
               exit 0
             fi
 
-            if [[ "$STATUS" == "failed" ]]; then
-              echo "Staging deploy FAILED."
-              exit 1
-            fi
-
-            sleep 10
+            sleep 20
           done
 
-          echo "Timed out waiting for staging deploy."
+          echo "Timed out waiting for new staging deploy."
           exit 1
 
   test:
     name: mabl Test
-    needs: trigger-render-staging
+    needs: wait-for-render-staging
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
