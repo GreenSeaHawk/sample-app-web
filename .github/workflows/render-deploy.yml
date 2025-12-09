@@ -10,19 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: npm ci
+
       - name: Build app
-        # Prevent CI warnings from failing the build
         run: CI=false npm run build
-      - name: Trigger Render Staging
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+
+      - name: Trigger Render Staging Deploy
         run: |
-          curl -X POST \
-            -H "Accept: application/json" \
-            -H "Authorization: Bearer $RENDER_API_KEY" \
-            https://api.render.com/deploy/srv-$RENDER_STAGING_HOOK
+          curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
 
   test:
     name: mabl Test
@@ -48,16 +45,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: npm ci
+
       - name: Build app
-        # Prevent CI warnings from failing the build
         run: CI=false npm run build
-      - name: Trigger Render Deploy
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+
+      - name: Trigger Render Production Deploy
         run: |
-          curl -X POST \
-            -H "Accept: application/json" \
-            -H "Authorization: Bearer $RENDER_API_KEY" \
-            https://api.render.com/deploy/srv-$RENDER_DEPLOY_HOOK
+          curl -X POST "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}"
