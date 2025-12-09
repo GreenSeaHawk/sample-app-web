@@ -8,20 +8,27 @@ on:
 jobs:
 
   test:
-    name: mabl Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Functional test deployment
-        id: mabl-test-deployment
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Upload build artifact to mabl
+        uses: mablhq/github-upload-artifact-action@v1
+        with:
+          application-id: <your-app-id>
+          artifact-path: build/
+
+      - name: mabl Test
         uses: mablhq/github-run-tests-action@v1
         env:
-          # Use a "CI/CD Integration" type of mabl API key
           MABL_API_KEY: ${{ secrets.MABL_API_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-#          application-id: <your-application-id-a>
           environment-id: H5vlRzlVynLjzYtwsflyvQ-e
 
   trigger-render-deploy:
