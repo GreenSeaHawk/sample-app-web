@@ -28,12 +28,19 @@ jobs:
         run: |
           echo "Waiting for Render staging deploy to finish..."
           for i in {1..30}; do
-            STATUS=$(curl -s \
+            RESPONSE=$(curl -s \
               -H "Authorization: Bearer $RENDER_API_KEY" \
-              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys \
-              | jq -r '.[0].status')
+              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys)
+
+            STATUS=$(echo "$RESPONSE" | jq -r '.data[0].status')
 
             echo "Current status: $STATUS"
+
+            if [[ "$STATUS" == "null" ]]; then
+              echo "No deploy record yet. Waiting..."
+              sleep 5
+              continue
+            fi
 
             if [[ "$STATUS" == "live" ]]; then
               echo "Staging deploy is live!"
