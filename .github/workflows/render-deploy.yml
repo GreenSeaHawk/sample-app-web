@@ -49,42 +49,42 @@ jobs:
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_STAGING_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
-          DEPLOY_TRIGGER_TIME: ${{ steps.trigger_render.outputs.trigger_time }} # ISO timestamp when you triggered the deploy
+          DEPLOY_TRIGGER_TIME: ${{ steps.trigger_render.outputs.trigger_time }}
         run: |
           echo "Polling for latest staging deploy..."
           for i in {1..60}; do
             RESPONSE=$(curl -s \
               -H "Authorization: Bearer $RENDER_API_KEY" \
               "https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys?limit=1")
-
-            # Check if the response has at least one deploy
-            COUNT=$(echo "$RESPONSE" | jq 'length')
-            if [[ "$COUNT" -eq 0 ]]; then
-              echo "No deploys found yet, retrying..."
+          
+            echo "API response: $RESPONSE"
+          
+            # Safely get deploy info using try
+            LATEST_DEPLOY_TIME=$(echo "$RESPONSE" | jq -r 'try .[0].deploy.createdAt // empty')
+            LATEST_DEPLOY_STATUS=$(echo "$RESPONSE" | jq -r 'try .[0].deploy.status // empty')
+          
+            if [[ -z "$LATEST_DEPLOY_TIME" ]] || [[ -z "$LATEST_DEPLOY_STATUS" ]]; then
+              echo "No deploy yet, retrying..."
               sleep 20
               continue
             fi
-
-            LATEST_DEPLOY_TIME=$(echo "$RESPONSE" | jq -r '.[0].deploy.createdAt')
-            LATEST_DEPLOY_STATUS=$(echo "$RESPONSE" | jq -r '.[0].deploy.status')
-
+          
             echo "Latest deploy created at: $LATEST_DEPLOY_TIME | status: $LATEST_DEPLOY_STATUS"
-
+          
             # Check if the deploy is new (after workflow start) and live
             if [[ "$LATEST_DEPLOY_TIME" > "$DEPLOY_TRIGGER_TIME" ]] && [[ "$LATEST_DEPLOY_STATUS" == "live" ]]; then
               echo "New staging deploy is live!"
               exit 0
             fi
-
-            # Optionally, check if deploy failed
+          
             if [[ "$LATEST_DEPLOY_STATUS" == "failed" ]]; then
               echo "Staging deploy FAILED."
               exit 1
             fi
-
+          
             sleep 20
           done
-
+          
           echo "Timed out waiting for new staging deploy."
           exit 1
 
