@@ -55,22 +55,22 @@ jobs:
           for i in {1..60}; do
             RESPONSE=$(curl -s \
               -H "Authorization: Bearer $RENDER_API_KEY" \
-              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys)
+              "https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys")
           
-            LATEST_DEPLOY_TIME=$(echo "$RESPONSE" | jq -r '.data[0].deploy.createdAt')
-            STATUS=$(echo "$RESPONSE" | jq -r '.data[0].deploy.status')
+            LATEST_DEPLOY_TIME=$(echo "$RESPONSE" | jq -r '.[0].deploy.createdAt')
+            STATUS=$(echo "$RESPONSE" | jq -r '.[0].deploy.status')
           
             echo "Latest deploy created at: $LATEST_DEPLOY_TIME | status: $STATUS"
-
-            # Check if the deploy is new and live
+  
+            # Check if the deploy is new (after workflow start) and live
             if [[ "$LATEST_DEPLOY_TIME" > "$DEPLOY_TRIGGER_TIME" ]] && [[ "$STATUS" == "live" ]]; then
               echo "New staging deploy is live!"
               exit 0
             fi
-
+  
             sleep 20
           done
-
+  
           echo "Timed out waiting for new staging deploy."
           exit 1
 
