@@ -122,7 +122,7 @@ function Login(props) {
                   // but is there for backwards compatibility
                   customClass="btn_action"
                   testId="login-button"
-                  value="Submit"
+                  value="Login"
                 />
               </form>
             </div>

@@ -6,6 +6,7 @@ export const VALID_USERNAMES = [
   "performance_glitch_user",
   "error_user",
   "visual_user",
+  "fake_user"
 ];
 export const VALID_PASSWORD = "secret_sauce";
 export const ROUTES = {
