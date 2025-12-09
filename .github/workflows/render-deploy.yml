@@ -27,36 +27,33 @@ jobs:
           RENDER_STAGING_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
         run: |
           echo "Waiting for Render staging deploy to finish..."
-          for i in {1..30}; do
+          for i in {1..60}; do
             RESPONSE=$(curl -s \
-              -H "Authorization: Bearer $RENDER_API_KEY" \
-              https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys)
-
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+            https://api.render.com/v1/services/$RENDER_STAGING_SERVICE_ID/deploys)
+          
+            DEPLOY_STATUS=$(echo "$RESPONSE" | jq -r '.data[0].deploy.deployStatus')
             STATUS=$(echo "$RESPONSE" | jq -r '.data[0].status')
-
-            echo "Current status: $STATUS"
-
-            if [[ "$STATUS" == "null" ]]; then
-              echo "No deploy record yet. Waiting..."
-              sleep 5
-              continue
+          
+          echo "Deploy status: $DEPLOY_STATUS | Service status: $STATUS"
+          
+          # Static site is fully deployed
+            if [[ "$DEPLOY_STATUS" == "succeeded" ]] || [[ "$STATUS" == "updated" ]]; then
+            echo "Staging deploy is finished!"
+            exit 0
             fi
-
-            if [[ "$STATUS" == "live" ]]; then
-              echo "Staging deploy is live!"
-              exit 0
+          
+            # Failed state
+            if [[ "$DEPLOY_STATUS" == "failed" ]] || [[ "$STATUS" == "failed" ]]; then
+            echo "Staging deploy FAILED."
+            exit 1
             fi
-
-            if [[ "$STATUS" == "failed" ]]; then
-              echo "Staging deploy FAILED."
-              exit 1
-            fi
-
+          
             sleep 10
-          done
-
-          echo "Timed out waiting for staging deploy."
-          exit 1
+            done
+            
+            echo "Timed out waiting for staging deploy."
+            exit 1
 
   test:
     name: mabl Test
