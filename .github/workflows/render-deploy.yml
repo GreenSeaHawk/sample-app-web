@@ -8,28 +8,40 @@ on:
 jobs:
 
   test:
+    name: mabl Test
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
+      # 1️⃣ Install and build your app BEFORE sending to mabl
       - name: Install dependencies
         run: npm ci
 
       - name: Build app
         run: npm run build
 
-      - name: Upload build artifact to mabl
+      # 2️⃣ Upload the built artifact to mabl (ensures mabl tests latest code)
+      - name: Upload build to mabl
         uses: mablhq/github-upload-artifact-action@v1
-        with:
-          application-id: <your-app-id>
-          artifact-path: build/
-
-      - name: mabl Test
-        uses: mablhq/github-run-tests-action@v1
         env:
           MABL_API_KEY: ${{ secrets.MABL_API_TOKEN }}
         with:
+          application-id: <YOUR_MABL_APPLICATION_ID>
+          artifact-path: build/
+
+      # 3️⃣ Run mabl tests using the newly uploaded build
+      - name: Functional test deployment
+        id: mabl-test-deployment
+        uses: mablhq/github-run-tests-action@v1
+        env:
+          MABL_API_KEY: ${{ secrets.MABL_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
           environment-id: H5vlRzlVynLjzYtwsflyvQ-e
+          # Optional extras (uncomment if needed)
+          # browser-types: "chrome,firefox"
+          # plan-labels: "smoke-test"
 
   trigger-render-deploy:
     needs: test
