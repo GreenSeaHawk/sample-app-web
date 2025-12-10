@@ -97,7 +97,7 @@ exports[`Login should render correctly 1`] = `
           <h4>
             Password for all users:
           </h4>
-          secret_sauce
+          super_secret_sauce_123
         </div>
       </div>
     </div>
