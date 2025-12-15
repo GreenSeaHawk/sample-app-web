@@ -127,6 +127,63 @@ Merges to master need to manually be triggered in [Actions > github pages releas
 
 See: [.github/workflows/github-pages.yml GitHub Action](.github/workflows/github-pages.yml.disabled)
 
+## Using Mabl MCP (local connector)
+
+If you want Mabl to reach a locally running instance of this app (for debugging or running cloud tests against local endpoints), the Mabl MCP (Local Connector) bridges the Mabl cloud and your machine.
+
+Quick start (no secrets in repo)
+
+1. Provide your Mabl credentials in your shell (do NOT commit these):
+
+```bash
+export MABL_ACCOUNT_ID="YOUR_MABL_ACCOUNT_ID"
+export MABL_API_KEY="YOUR_MABL_API_KEY"
+```
+
+2. Start your app (if needed):
+
+```bash
+npm start        # runs app at http://localhost:3000 by default
+```
+
+3. Start the MCP connector (this project includes an npm script `mcp:start`):
+
+```bash
+npm run mcp:start
+# or directly:
+npx @mablhq/mabl-cli@latest mcp start
+```
+
+4. Verify it's running: watch the terminal output for the MCP startup logs (it prints bound ports and connection status). You can also run:
+
+```bash
+npx @mablhq/mabl-cli@latest mcp status   # if supported by your CLI version
+ps aux | grep -i mabl | grep -v grep
+lsof -iTCP -sTCP:LISTEN -n -P | grep -E "mabl|node|<port>"
+```
+
+Stopping MCP: Ctrl+C in the foreground terminal, or kill the process by PID.
+
+Notes & security
+
+- Do NOT store `MABL_API_KEY` or other secrets in checked-in files. Use environment variables, your OS keychain, or CI secret stores.
+- This repo includes `.env.example` to show required variables; copy it to `.env.local` for local use and keep `.env.local` in `.gitignore`.
+- In CI, set `MABL_ACCOUNT_ID` and `MABL_API_KEY` as secure environment variables and start the MCP as part of the job before running Mabl plans.
+
+See the project-level `mcp.json` entry (or your global Copilot/IDE MCP config) for the exact command used by your tools. The workspace contains an MCP entry that runs:
+
+```
+npx @mablhq/mabl-cli@latest mcp start
+```
+
+If you'd like, I can add a short developer-run checklist or a CI example (Jenkins/GitHub Actions) to the repo.
+
+To learn more about the Mabl CLI options, run:
+
+```bash
+npx @mablhq/mabl-cli@latest --help
+npx @mablhq/mabl-cli@latest mcp --help
+```
 
 To run on some macOS you will need to do this:
 arch -x86_64 zsh

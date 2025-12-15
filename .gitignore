@@ -40,3 +40,6 @@ build/
 # Temporary files
 *.tmp
 *.swp
+
+# MCP
+mcp.json
