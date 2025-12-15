@@ -31,7 +31,7 @@ export const InventoryDataLong = [
     id: 4,
     name: "Sauce Labs Backpack",
     desc: `carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.`,
-    price: 29.99,
+    price: 19.99,
     image_url: "sauce-backpack-1200x1500.jpg",
   },
   {
