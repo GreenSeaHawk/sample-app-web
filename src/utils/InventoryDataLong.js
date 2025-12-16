@@ -3,7 +3,7 @@ export const InventoryDataLong = [
     id: 0,
     name: "Sauce Labs Bike Light",
     desc: `A red light isn't the desired state in testing but it sure helps when riding your bike at night. Water-resistant with 3 lighting modes, 1 AAA battery included.`,
-    price: 9.99,
+    price: 19.99,
     image_url: "bike-light-1200x1500.jpg",
   },
   {
