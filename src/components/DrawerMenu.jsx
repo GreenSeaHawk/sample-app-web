@@ -63,14 +63,6 @@ const DrawerMenu = ({ history }) => {
         All Items
       </a>
       <a
-        id="about_sidebar_link"
-        className="menu-item"
-        href={aboutLink}
-        data-test="about-sidebar-link"
-      >
-        About
-      </a>
-      <a
         id="logout_sidebar_link"
         className="menu-item"
         href="#"
@@ -82,6 +74,14 @@ const DrawerMenu = ({ history }) => {
         data-test="logout-sidebar-link"
       >
         Logout
+      </a>
+      <a
+        id="about_sidebar_link"
+        className="menu-item"
+        href={aboutLink}
+        data-test="about-sidebar-link"
+      >
+        About
       </a>
       <a
         id="reset_sidebar_link"
