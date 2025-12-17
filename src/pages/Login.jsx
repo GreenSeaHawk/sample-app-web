@@ -121,7 +121,7 @@ function Login(props) {
                   // `btn_action` has no style function
                   // but is there for backwards compatibility
                   customClass="btn_action"
-                  testId="login-button"
+                  testId="submit-button"
                   value="Submit"
                 />
               </form>
